@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>绿意食光 | 家庭点餐系统</title>
+    <!-- 免费可商用字体: 思源黑体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Noto Sans SC', 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #d9eec8 0%, #bcdd9c 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* 主容器 */
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 245, 0.85);
+            backdrop-filter: blur(3px);
+            border-radius: 56px;
+            box-shadow: 0 25px 45px rgba(40, 70, 10, 0.2);
+            padding: 28px 24px;
+            transition: all 0.3s;
+        }
+
+        /* 头部 */
+        .date-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+            padding-bottom: 16px;
+            border-bottom: 3px solid #aad07a;
+        }
+        .date-greeting {
+            font-size: 1.9rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #35801c, #6ab83a);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .today-badge {
+            background: #f1fae6;
+            padding: 8px 24px;
+            border-radius: 60px;
+            font-weight: 600;
+            color: #3c8522;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            font-size: 1rem;
+        }
+
+        /* 绿色大按钮点餐栏 */
+        .order-panel {
+            background: #fefef0;
+            border-radius: 64px;
+            padding: 24px 30px;
+            margin-bottom: 32px;
+            box-shadow: 0 12px 24px rgba(60, 90, 20, 0.12);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 24px;
+            border: 1px solid #cbe2b2;
+        }
+        .order-field {
+            flex: 1;
+            min-width: 170px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .order-field label {
+            font-weight: 800;
+            color: #3a7422;
+            font-size: 1rem;
+            margin-left: 12px;
+            letter-spacing: 1px;
+        }
+        .order-field select,
+        .order-field input {
+            background: #eff9e4;
+            border: 2px solid #a5cf79;
+            border-radius: 80px;
+            padding: 14px 22px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #235c10;
+            outline: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .order-field select:hover,
+        .order-field input:hover {
+            background: #e2f5d2;
+            border-color: #5fad2e;
+            transform: scale(0.98);
+        }
+        .submit-btn {
+            background: linear-gradient(115deg, #62b53a, #39801d);
+            border: none;
+            padding: 14px 36px;
+            border-radius: 80px;
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 10px 18px rgba(50, 100, 10, 0.3);
+            letter-spacing: 2px;
+            min-width: 170px;
+            text-align: center;
+        }
+        .submit-btn:hover {
+            background: linear-gradient(115deg, #519e2a, #2f6718);
+            transform: scale(0.96);
+        }
+
+        /* 分类选项卡 + 图标 */
+        .category-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 28px;
+            padding-bottom: 8px;
+        }
+        .cat-btn {
+            background: #eef5e6;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #3f712c;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .cat-btn.active {
+            background: #3e8c24;
+            color: white;
+            box-shadow: 0 6px 12px rgba(62,140,36,0.3);
+        }
+        .cat-btn:hover:not(.active) {
+            background: #cde2b5;
+            transform: translateY(-2px);
+        }
+
+        /* 菜品网格 */
+        .dishes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+            gap: 22px;
+            margin-bottom: 48px;
+            max-height: 62vh;
+            overflow-y: auto;
+            padding: 6px 4px 16px 4px;
+        }
+        .dishes-grid::-webkit-scrollbar {
+            width: 8px;
+        }
+        .dishes-grid::-webkit-scrollbar-track {
+            background: #ddeecf;
+            border-radius: 10px;
+        }
+        .dishes-grid::-webkit-scrollbar-thumb {
+            background: #8bc466;
+            border-radius: 10px;
+        }
+
+        /* 菜品卡片：菜名加图标+背景底色 */
+        .dish-card {
+            background: white;
+            border-radius: 32px;
+            padding: 18px 20px;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.06);
+            transition: all 0.25s;
+            border: 1px solid #d9ecbf;
+        }
+        .dish-card:hover {
+            transform: translateY(-5px);
+            border-color: #9bcb6e;
+            box-shadow: 0 18px 28px -12px rgba(70,110,30,0.25);
+        }
+        .dish-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .dish-name {
+            font-size: 1.25rem;
+            font-weight: 800;
+            background: #eef7e4;
+            padding: 5px 14px;
+            border-radius: 60px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #2b6617;
+        }
+        .rating {
+            background: #fff1c1;
+            border-radius: 40px;
+            padding: 4px 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #bb7e1a;
+        }
+        .stars {
+            color: #f5b342;
+            letter-spacing: 1px;
+        }
+        .dish-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+        }
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .checkbox-wrapper input {
+            width: 22px;
+            height: 22px;
+            accent-color: #4f9a2c;
+        }
+        .recipe-btn {
+            background: #eaf3e0;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 0.7rem;   /* 做法文字缩小一号 */
+            font-weight: 500;
+            color: #3c7522;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .recipe-btn:hover {
+            background: #cfe2b5;
+        }
+
+        /* 内嵌页效果 - 点单记录区域 (绿色风格，按点单人分组) */
+        .history-embed {
+            background: #eaf5e0;
+            border-radius: 44px;
+            margin-top: 28px;
+            box-shadow: inset 0 1px 4px rgba(0,0,0,0.02), 0 12px 28px rgba(60,80,20,0.1);
+            border: 1px solid #bbda9a;
+            overflow: hidden;
+        }
+        .history-header {
+            background: #d9ecca;
+            padding: 18px 28px;
+            border-bottom: 2px solid #b6d494;
+        }
+        .history-header h3 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #32681d;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .history-scroll {
+            max-height: 480px;
+            overflow-y: auto;
+            padding: 20px 24px;
+        }
+        /* 按点单人分组卡片 */
+        .person-group {
+            background: #fffff2;
+            border-radius: 36px;
+            margin-bottom: 28px;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid #cce6b0;
+        }
+        .person-title {
+            background: #d6f0c2;
+            padding: 14px 24px;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #2a6816;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #b8dc92;
+        }
+        .day-record {
+            padding: 12px 24px;
+            border-bottom: 1px solid #e2f0d2;
+        }
+        .day-record:last-child {
+            border-bottom: none;
+        }
+        .day-label {
+            font-weight: 700;
+            color: #4e8532;
+            background: #ecf8e1;
+            display: inline-block;
+            padding: 4px 16px;
+            border-radius: 40px;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+        }
+        .dish-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .dish-tag {
+            background: #eef4e4;
+            border-radius: 60px;
+            padding: 6px 16px;
+            font-size: 0.85rem;
+            color: #3f6b28;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .delete-record {
+            background: transparent;
+            border: none;
+            color: #bc8f6b;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-left: 12px;
+            transition: 0.1s;
+            font-weight: bold;
+        }
+        .delete-record:hover {
+            color: #d9534f;
+            transform: scale(1.1);
+        }
+        .empty-record {
+            text-align: center;
+            padding: 40px;
+            color: #7f9f60;
+            font-size: 1rem;
+        }
+
+        /* 自定义模态确认框 (菜品单行显示) */
+        .custom-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(40, 60, 20, 0.6);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.2s;
+        }
+        .custom-modal.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .modal-content {
+            background: #fefce8;
+            max-width: 460px;
+            width: 90%;
+            border-radius: 64px;
+            padding: 24px 28px 32px;
+            text-align: center;
+            box-shadow: 0 30px 40px rgba(0,0,0,0.2);
+            border: 2px solid #b3da8a;
+        }
+        .modal-content h4 {
+            font-size: 1.6rem;
+            color: #357a1c;
+            margin-bottom: 20px;
+        }
+        .modal-dish-list {
+            text-align: left;
+            background: #eff9e4;
+            border-radius: 48px;
+            padding: 18px 24px;
+            margin: 16px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .modal-dish-list p {
+            padding: 8px 0;
+            border-bottom: 1px dashed #bbda9a;
+            font-weight: 500;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .modal-dish-list span {
+            font-size: 1.1rem;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .modal-btn {
+            padding: 12px 28px;
+            border-radius: 50px;
+            border: none;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .confirm-btn {
+            background: #4f9a2c;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .cancel-btn {
+            background: #e2e6da;
+            color: #4a6a2e;
+        }
+
+        /* 响应式 */
+        @media (max-width: 780px) {
+            .app-container {
+                padding: 20px 16px;
+            }
+            .order-panel {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 18px;
+            }
+            .submit-btn, .order-field select, .order-field input {
+                width: 100%;
+            }
+            .dish-name {
+                font-size: 1rem;
+            }
+            .person-title {
+                font-size: 1.1rem;
+            }
+        }
+        @media (max-width: 550px) {
+            .dishes-grid {
+                grid-template-columns: 1fr;
+            }
+            .cat-btn {
+                font-size: 0.8rem;
+                padding: 6px 16px;
+            }
+        }
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.7rem;
+            color: #608a3a;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="date-header">
+        <div class="date-greeting">🌱 春日食单 · 家庭点餐乐园</div>
+        <div class="today-badge" id="todayDisplay"></div>
+    </div>
+
+    <!-- 大按钮点餐栏 -->
+    <div class="order-panel">
+        <div class="order-field">
+            <label>👨‍👩‍👧 我是谁？</label>
+            <select id="orderPerson">
+                <option value="" disabled selected>—— 选身份 ——</option>
+                <option value="爸爸">👨 爸爸</option>
+                <option value="妈妈">👩 妈妈</option>
+                <option value="爷爷">👴 爷爷</option>
+                <option value="奶奶">👵 奶奶</option>
+                <option value="大宝">🧒 大宝</option>
+                <option value="二宝">👧 二宝</option>
+                <option value="三宝">👶 三宝</option>
+                <option value="四宝">🍼 四宝</option>
+            </select>
+        </div>
+        <div class="order-field">
+            <label>📅 哪天吃？</label>
+            <input type="date" id="orderDate">
+        </div>
+        <button class="submit-btn" id="submitOrderBtn">✨ 我要点餐 ✨</button>
+    </div>
+
+    <!-- 分类栏带图标 -->
+    <div class="category-tabs" id="categoryTabs"></div>
+
+    <!-- 菜品网格 -->
+    <div class="dishes-grid" id="dishesGrid"></div>
+
+    <!-- 点单记录「内嵌页」效果，按点单人分类显示每天的点单数据 -->
+    <div class="history-embed">
+        <div class="history-header">
+            <h3>📋 家庭点单小册子 · 内嵌记录</h3>
+        </div>
+        <div class="history-scroll" id="historyScrollArea">
+            <div id="historyGroupContainer"></div>
+        </div>
+    </div>
+    <footer>🌳 每餐都有爱 · 数据保存在本地浏览器</footer>
+</div>
+
+<!-- 自定义确认模态框 -->
+<div id="confirmModal" class="custom-modal">
+    <div class="modal-content">
+        <h4>🌸 确认点餐 🌸</h4>
+        <div id="modalDishList" class="modal-dish-list"></div>
+        <div class="modal-buttons">
+            <button id="modalConfirmBtn" class="modal-btn confirm-btn">✅ 确认下单</button>
+            <button id="modalCancelBtn" class="modal-btn cancel-btn">❌ 再想想</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------- 1. 生成100道菜品数据 ----------
+    const CATEGORIES = [
+        "🔥 经典热菜", "🥗 清爽凉菜", "🍲 鲜美汤羹", "🍚 花样主食", "🥚 营养禽蛋",
+        "🐟 鲜香水产", "🥬 时令蔬菜", "🍖 家常荤菜", "🌿 豆制品", "🍄 山珍菌菇"
+    ];
+    // 分类对应图标映射（用于分类按钮）
+    const CAT_ICON_MAP = {
+        "全部": "🌿",
+        "🔥 经典热菜": "🔥",
+        "🥗 清爽凉菜": "🥗",
+        "🍲 鲜美汤羹": "🍲",
+        "🍚 花样主食": "🍚",
+        "🥚 营养禽蛋": "🥚",
+        "🐟 鲜香水产": "🐟",
+        "🥬 时令蔬菜": "🥬",
+        "🍖 家常荤菜": "🍖",
+        "🌿 豆制品": "🌿",
+        "🍄 山珍菌菇": "🍄"
+    };
+    
+    function getStars(rating) {
+        let full = Math.floor(rating);
+        let half = rating % 1 >= 0.5 ? 1 : 0;
+        return "★".repeat(full) + (half ? "½" : "") + "☆".repeat(5 - full - (half?1:0));
+    }
+    
+    const recipeTemplates = [
+        "1. 主料处理干净；2. 热锅凉油爆香葱姜蒜；3. 下主料猛火快炒；4. 调味收汁，鲜香四溢。",
+        "1. 食材焯水断生；2. 调碗芡（生抽、蚝油、糖、淀粉）；3. 爆炒挂汁，滑嫩爽口。",
+        "1. 肉类加料酒腌制；2. 砂锅慢炖40分钟；3. 入蔬菜再炖10分钟；4. 出锅撒香菜，暖胃暖心。",
+        "1. 冷水下锅焯去浮沫；2. 炒香底料加高汤；3. 文火煨至酥烂；4. 点缀葱花提鲜。"
+    ];
+    
+    const dishesDB = [];
+    for (let catIdx = 0; catIdx < CATEGORIES.length; catIdx++) {
+        const category = CATEGORIES[catIdx];
+        for (let i = 1; i <= 10; i++) {
+            let dishName = "";
+            const hotNames = ["鱼香肉丝","宫保鸡丁","回锅肉","小炒黄牛肉","干锅花菜","农家小炒肉","辣子鸡","红烧排骨","葱爆羊肉","蒜苔炒肉"];
+            const cold = ["凉拌黄瓜","拍蒜木耳","口水鸡","皮蛋豆腐","红油耳丝","凉拌三丝","柠檬凤爪","糖醋萝卜","姜汁松花蛋","麻酱豆角"];
+            const soups = ["番茄蛋花汤","酸辣汤","玉米排骨汤","冬瓜丸子汤","紫菜虾皮汤","西湖牛肉羹","银耳莲子羹","菌菇豆腐汤","罗宋汤","山药鸡汤"];
+            const staples = ["扬州炒饭","酱油炒饭","蛋炒饭","葱油拌面","炸酱面","鲜肉馄饨","韭菜盒子","南瓜馒头","葱花饼","什锦焖饭"];
+            const eggs = ["番茄炒蛋","滑蛋虾仁","洋葱炒蛋","厚蛋烧","虎皮鸡蛋","韭菜炒鸡蛋","蒸水蛋","咸蛋黄焗南瓜","金钱蛋","蛋饺"];
+            const fish = ["清蒸鲈鱼","红烧带鱼","糖醋鱼块","白灼虾","香辣花甲","干烧平鱼","蒜蓉粉丝蒸扇贝","鲫鱼豆腐汤","剁椒鱼头","椒盐皮皮虾"];
+            const vegs = ["清炒时蔬","蚝油生菜","蒜蓉空心菜","手撕包菜","地三鲜","荷塘小炒","油焖笋","干煸四季豆","素炒西葫芦","上汤娃娃菜"];
+            const meats = ["红烧肉","糖醋里脊","粉蒸肉","可乐鸡翅","酱大骨","梅菜扣肉","黑椒牛柳","蒜香排骨","啤酒鸭","红烧猪蹄"];
+            const beans = ["麻婆豆腐","家常豆腐","千页豆腐","香干炒肉","腐竹烧木耳","芹菜香干","豆豉鲮鱼油麦菜","素鸡红烧","白菜炖豆腐","豆花牛肉"];
+            const fungi = ["香菇油菜","松仁玉米","干锅茶树菇","杏鲍菇炒肉","椒盐平菇","小鸡炖蘑菇","奶油蘑菇汤","木耳山药","金针菇肥牛","菌菇拼盘"];
+            const arrays = [hotNames,cold,soups,staples,eggs,fish,vegs,meats,beans,fungi];
+            dishName = arrays[catIdx][i-1] || (arrays[catIdx][0] + (i));
+            const finalName = dishName;
+            const ratingVal = 3.5 + Math.random() * 1.5;
+            const finalRating = Math.min(5, ratingVal);
+            const recipeDetail = `【${finalName}】家常做法：\n${recipeTemplates[catIdx % recipeTemplates.length]}\n💡 小贴士：春蔬提鲜，火候是关键。`;
+            dishesDB.push({
+                id: catIdx * 10 + i,
+                name: finalName,
+                category: category,
+                recipe: recipeDetail,
+                rating: finalRating,
+                starStr: getStars(finalRating),
+                ratingText: finalRating.toFixed(1) + "星"
+            });
+        }
+    }
+    
+    // 存储 & 全局状态
+    let currentCategory = "全部";
+    let selectedDishIds = new Set();
+    let allOrders = [];
+    const STORAGE_KEY = "family_meal_orders";
+    
+    function loadOrders() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if(stored) { try{ allOrders = JSON.parse(stored); } catch(e){ allOrders = []; } }
+        else allOrders = [];
+    }
+    function saveOrders() { localStorage.setItem(STORAGE_KEY, JSON.stringify(allOrders)); }
+    
+    // 渲染点单记录：按点单人分类显示每天的点单数据（内嵌页风格）
+    function renderGroupedHistory() {
+        const container = document.getElementById('historyGroupContainer');
+        if(!container) return;
+        if(allOrders.length === 0) {
+            container.innerHTML = `<div class="empty-record">🌸 还没有点餐记录，快给家人点几道美味吧～</div>`;
+            return;
+        }
+        // 按点餐人分组
+        const groupedByPerson = new Map();
+        allOrders.forEach(order => {
+            if(!groupedByPerson.has(order.person)) groupedByPerson.set(order.person, []);
+            groupedByPerson.get(order.person).push(order);
+        });
+        let html = '';
+        for(let [person, orders] of groupedByPerson.entries()) {
+            // 按日期排序（新在上）
+            orders.sort((a,b)=> new Date(b.date) - new Date(a.date));
+            // 再按日期分组展示每天
+            const dailyMap = new Map();
+            orders.forEach(o => { if(!dailyMap.has(o.date)) dailyMap.set(o.date, []); dailyMap.get(o.date).push(o); });
+            let personHtml = `<div class="person-group"><div class="person-title"><span>👤 ${person}</span><span>📆 ${orders.length} 次点单</span></div>`;
+            for(let [date, dayOrders] of dailyMap.entries()) {
+                let dishesHtml = '';
+                dayOrders.forEach((orderItem, idx) => {
+                    const dishNames = orderItem.dishesList.join('、');
+                    const recordId = orderItem.id || Date.now() + idx;
+                    dishesHtml += `<div style="margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;">
+                                    <div class="dish-tag">🍽️ ${dishNames}</div>
+                                    <button class="delete-record" data-person="${person}" data-date="${date}" data-dishes="${dishNames.replace(/"/g, '&quot;')}" data-id="${recordId}">🗑️ 删除</button>
+                                </div>`;
+                });
+                personHtml += `<div class="day-record"><div class="day-label">📅 ${date}</div><div class="dish-list">${dishesHtml}</div></div>`;
+            }
+            personHtml += `</div>`;
+            html += personHtml;
+        }
+        container.innerHTML = html;
+        // 绑定删除事件
+        document.querySelectorAll('.delete-record').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const person = btn.getAttribute('data-person');
+                const date = btn.getAttribute('data-date');
+                const dishesAttr = btn.getAttribute('data-dishes');
+                const index = allOrders.findIndex(o => o.person === person && o.date === date && o.dishesList.join('、') === dishesAttr);
+                if(index !== -1) {
+                    allOrders.splice(index, 1);
+                    saveOrders();
+                    renderGroupedHistory();
+                } else {
+                    alert("无法定位记录，请刷新");
+                }
+            });
+        });
+    }
+    
+    // 菜品渲染 (菜名带图标和背景)
+    function renderDishes() {
+        const grid = document.getElementById('dishesGrid');
+        let filtered = dishesDB;
+        if(currentCategory !== "全部") filtered = dishesDB.filter(d => d.category === currentCategory);
+        if(filtered.length===0){ grid.innerHTML='<div style="grid-column:1/-1; text-align:center; padding:40px;">暂无菜品~</div>'; return;}
+        grid.innerHTML = "";
+        filtered.forEach(dish => {
+            const isChecked = selectedDishIds.has(dish.id);
+            const card = document.createElement('div');
+            card.className = 'dish-card';
+            let dishIcon = "🍲";
+            if(dish.name.includes("鸡")||dish.name.includes("鸭")) dishIcon = "🍗";
+            else if(dish.name.includes("鱼")||dish.name.includes("虾")) dishIcon = "🐟";
+            else if(dish.name.includes("蛋")) dishIcon = "🥚";
+            else if(dish.name.includes("豆腐")) dishIcon = "🥟";
+            else dishIcon = "🥬";
+            card.innerHTML = `
+                <div class="dish-header">
+                    <span class="dish-name">${dishIcon} ${dish.name}</span>
+                    <div class="rating"><span class="stars">${dish.starStr}</span> ${dish.ratingText}</div>
+                </div>
+                <div class="dish-actions">
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" class="dish-checkbox" data-id="${dish.id}" ${isChecked ? 'checked' : ''}>
+                        <span>✓ 点这道</span>
+                    </label>
+                    <button class="recipe-btn" data-recipe="${dish.recipe.replace(/"/g, '&quot;')}" data-name="${dish.name}">📖 做法 · tips</button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+        document.querySelectorAll('.dish-checkbox').forEach(cb => {
+            cb.addEventListener('change', (e) => {
+                const id = parseInt(e.target.dataset.id);
+                if(e.target.checked) selectedDishIds.add(id);
+                else selectedDishIds.delete(id);
+            });
+        });
+        document.querySelectorAll('.recipe-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const recipe = btn.getAttribute('data-recipe');
+                const name = btn.getAttribute('data-name');
+                alert(`🍳 【${name}】 详细做法：\n${recipe}`);
+            });
+        });
+    }
+    
+    // 分类渲染带图标
+    function renderCategories() {
+        const container = document.getElementById('categoryTabs');
+        const allCats = ["全部", ...CATEGORIES];
+        container.innerHTML = "";
+        allCats.forEach(cat => {
+            const icon = CAT_ICON_MAP[cat] || "🍽️";
+            const btn = document.createElement('button');
+            btn.className = `cat-btn ${currentCategory === cat ? 'active' : ''}`;
+            btn.innerHTML = `${icon} ${cat}`;
+            btn.addEventListener('click', () => {
+                currentCategory = cat;
+                renderCategories();
+                renderDishes();
+            });
+            container.appendChild(btn);
+        });
+    }
+    
+    // 日期限制
+    function setDateRestrictions() {
+        const dateInput = document.getElementById('orderDate');
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth()+1).padStart(2,'0');
+        const dd = String(today.getDate()).padStart(2,'0');
+        const todayStr = `${yyyy}-${mm}-${dd}`;
+        dateInput.min = todayStr;
+        let max = new Date(); max.setDate(today.getDate()+7);
+        const maxY = max.getFullYear(), maxM = String(max.getMonth()+1).padStart(2,'0'), maxD = String(max.getDate()).padStart(2,'0');
+        dateInput.max = `${maxY}-${maxM}-${maxD}`;
+        dateInput.value = todayStr;
+    }
+    
+    function updateWeekday() {
+        const d=new Date();
+        const week=['周日','周一','周二','周三','周四','周五','周六'];
+        document.getElementById('todayDisplay').innerHTML = `📅 ${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} ${week[d.getDay()]} · 春意食光`;
+    }
+    
+    // 自定义模态确认框
+    function showConfirmModal(dishesNames) {
+        const modal = document.getElementById('confirmModal');
+        const dishContainer = document.getElementById('modalDishList');
+        dishContainer.innerHTML = dishesNames.map(name => `<p><span>🍽️</span> ${name}</p>`).join('');
+        modal.classList.add('active');
+        return new Promise((resolve) => {
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+            const cancelBtn = document.getElementById('modalCancelBtn');
+            const closeModal = () => {
+                modal.classList.remove('active');
+                confirmBtn.removeEventListener('click', onConfirm);
+                cancelBtn.removeEventListener('click', onCancel);
+            };
+            const onConfirm = () => { closeModal(); resolve(true); };
+            const onCancel = () => { closeModal(); resolve(false); };
+            confirmBtn.addEventListener('click', onConfirm);
+            cancelBtn.addEventListener('click', onCancel);
+        });
+    }
+    
+    // 提交逻辑
+    async function submitOrderHandler() {
+        const person = document.getElementById('orderPerson').value;
+        if(!person) { alert("请选择点餐人身份 👨‍👩‍👧"); return; }
+        const orderDate = document.getElementById('orderDate').value;
+        if(!orderDate) { alert("请选择点餐日期"); return; }
+        const todayMin = new Date().toISOString().slice(0,10);
+        if(orderDate < todayMin || orderDate > document.getElementById('orderDate').max) { alert("请选择今天起一周内的日期"); return; }
+        if(selectedDishIds.size === 0) { alert("请至少勾选一道美味～"); return; }
+        const selectedDishes = [];
+        for(let id of selectedDishIds){
+            const dish = dishesDB.find(d=>d.id===id);
+            if(dish) selectedDishes.push(dish.name);
+        }
+        if(selectedDishes.length===0) return;
+        const confirmed = await showConfirmModal(selectedDishes);
+        if(!confirmed) return;
+        const newOrder = {
+            id: Date.now(),
+            person: person,
+            date: orderDate,
+            dishesList: selectedDishes,
+            timestamp: new Date().toISOString()
+        };
+        allOrders.push(newOrder);
+        saveOrders();
+        selectedDishIds.clear();
+        document.getElementById('orderPerson').value = "";
+        setDateRestrictions();
+        renderDishes();
+        renderGroupedHistory();
+        alert("✅ 点餐成功！美味即将上桌~ 🌟");
+    }
+    
+    function init() {
+        loadOrders();
+        updateWeekday();
+        setDateRestrictions();
+        renderCategories();
+        renderDishes();
+        renderGroupedHistory();
+        document.getElementById('submitOrderBtn').addEventListener('click', submitOrderHandler);
+    }
+    init();
+</script>
+</body>
+</html>
